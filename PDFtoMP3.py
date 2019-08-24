@@ -35,24 +35,52 @@ def convert_to_mp3(file_name):
         "Š": "--"
     }
 
+    current_input_length = 0
     new_book_string = ""
 
-    # Rebuilding the book with fixed symbols.
-    for word in file_text.split(" "):
+    for sentence in file_text.split("."):
 
-        changed_word = word
+        new_sentence = ""
 
-        # If the word contains characters that are often misread, changes them accordingly
-        for character in word:
-            if character in symbol_dict:
-                changed_word = changed_word.replace(character, symbol_dict.get(character))
+        # Rebuilding the book with fixed symbols.
+        for word in sentence.split(" "):
 
-        new_book_string += changed_word + " "
+            changed_word = word
+
+            # If the word contains characters that are often misread, changes them accordingly
+            for character in word:
+                if character in symbol_dict:
+                    changed_word = changed_word.replace(character, symbol_dict.get(character))
+
+            new_sentence += changed_word + " "
+
+        # If the next sentence can fit in without being cut off in the middle, don't pad with spaces.
+        # Or, if ths sentence itself is too big to not be cut off, just add it in.
+        if new_sentence.__len__() >= 100 or (current_input_length + sentence.__len__() <= 100):
+            new_book_string += sentence[:-1] + "."
+
+        # elif current_input_length + sentence.__len__() > 100:
+        # Otherwise, if the next sentence will be too big but is itself at or under 100 characters, fill with spaces.
+        else:
+            remaining_space = 100 - (new_book_string.__len__() % 100)
+            new_book_string += fill_spaces(remaining_space) + sentence
+
+        current_input_length = new_book_string.__len__() % 100
 
     # Turns the string into a .mp3 file for easy listening :)
     to_text = gTTS(text=new_book_string, lang='en')
     to_text.save("audiobook.mp3")
 
+
+def fill_spaces(num_times):
+    """Made to fill spaces and prevent awkward cut-offs in gTTS reading, since it only accepts 100 characters at a time.
+    Returns a string that contains a number of spaces equal to num_times."""
+    to_return = ""
+
+    for a in range(0, num_times):
+        to_return += " "
+
+    return to_return
 
 if __name__ == "__main__":
 
